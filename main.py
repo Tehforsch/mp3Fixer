@@ -10,8 +10,8 @@ DRY_RUN = False
 HIDE_WRONG_PLAYLISTS = True
 playlistSeparator = ["–", "–", "—"]
 playlistFile = "playlists3.txt"
-collectionSource = "/home/toni/music"
-# collectionSource = Path("largeSource")
+collectionSource = "/home/toni/oldMusic"
+# collectionSource = Path("smallSource")
 collectionTarget = Path("target")
 songFileNameFormat = "{number:02d} - {artist} - {title}.mp3"
 
@@ -37,12 +37,14 @@ class Mp3(EasyID3):
         self.artist = stripFeature(self.tryRead("artist"))
         self.album = self.tryRead("album")
         self.title = self.tryRead("title")
+        self.isNone = any(x is None for x in [self.artist, self.album, self.title])
 
     def tryRead(self, tag):
         try:
             return self[tag][0]
         except:
-            print("TAG NOT AVAILABLE: {} FOR MP3: {}".format(tag, self.path))
+            if not tag in ["album"]:
+                print("TAG NOT AVAILABLE: {} FOR MP3: {}".format(tag, self.path))
             return ""
 
     def __repr__(self):
@@ -87,8 +89,9 @@ class Collection:
         mp3["album"] = song.album
         mp3["title"] = song.title
         mp3["tracknumber"] = str(song.number)
+        mp3["date"] = ""
         mp3.save()
-        print("{} fixed. (LOL)".format(mp3))
+        print("{} fixed -> {}.".format(mp3, song))
 
     def copySong(self, song, mp3, target):
         sourcePath = mp3.path
@@ -200,8 +203,6 @@ def readPlaylists(filename):
         if isWeirdPlaylist(nameAndSong[0]):
             continue
         yield Playlist(nameAndSong[0], nameAndSong[1:])
-
-
 
 collection = Collection(playlistFile, Path(collectionSource))
 print("COMPLETE PLAYLISTS:")
