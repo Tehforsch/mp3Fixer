@@ -5,15 +5,25 @@ import os
 from mutagen.easyid3 import EasyID3
 import re
 import shutil
+from datetime import date
 
 DRY_RUN = False
 HIDE_WRONG_PLAYLISTS = True
 playlistSeparator = ["–", "–", "—"]
 playlistFile = "playlists3.txt"
-collectionSource = "/home/toni/music"
-# collectionSource = Path("largeSource")
+collectionSource = "/home/toni/oldMusic"
 collectionTarget = Path("target")
 songFileNameFormat = "{number:02d} - {artist} - {title}.mp3"
+
+
+def getDate(string):
+    if "-" in string:
+        year, month, day = string.split("-")
+        return date(int(year), int(month), int(day))
+    elif string.strip() == "":
+        return None
+    else:
+        return date(year=int(string), month=1, day=1)
 
 def getSongString(artist, album, title):
     return "{} - {} - {}".format(artist, album, title)
@@ -37,6 +47,7 @@ class Mp3(EasyID3):
         self.artist = stripFeature(self.tryRead("artist"))
         self.album = self.tryRead("album")
         self.title = self.tryRead("title")
+        self.date = getDate(self.tryRead("date"))
 
     def tryRead(self, tag):
         try:
@@ -78,8 +89,10 @@ class Collection:
     def copyPlaylist(self, playlist, target):
         if not playlist.isComplete:
             return
+        minDate = max((mp3.date for mp3 in playlist.mp3s if mp3.date is not None), default=None)
         for (song, mp3) in zip(playlist.songs, playlist.mp3s):
             resultMp3 = self.copySong(song, mp3, target)
+            resultMp3.date = minDate
             self.fixTags(song, resultMp3)
 
     def fixTags(self, song, mp3):
@@ -87,6 +100,12 @@ class Collection:
         mp3["album"] = song.album
         mp3["title"] = song.title
         mp3["tracknumber"] = str(song.number)
+        if mp3.date is not None:
+            mp3["date"] = str(mp3.date.year)
+            mp3["originaldate"] = str(mp3.date.year)
+        else:
+            mp3["originaldate"] = ""
+            print("MISSING DATE!!!")
         mp3.save()
         print("{} fixed. (LOL)".format(mp3))
 
@@ -200,8 +219,6 @@ def readPlaylists(filename):
         if isWeirdPlaylist(nameAndSong[0]):
             continue
         yield Playlist(nameAndSong[0], nameAndSong[1:])
-
-
 
 collection = Collection(playlistFile, Path(collectionSource))
 print("COMPLETE PLAYLISTS:")
