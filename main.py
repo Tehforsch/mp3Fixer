@@ -47,13 +47,19 @@ class Mp3(EasyID3):
         self.artist = stripFeature(self.tryRead("artist"))
         self.album = self.tryRead("album")
         self.title = self.tryRead("title")
+<<<<<<< HEAD
         self.date = getDate(self.tryRead("date"))
+||||||| merged common ancestors
+=======
+        self.isNone = any(x is None for x in [self.artist, self.album, self.title])
+>>>>>>> e0cca04f38782b335a7f024004ebbd2a8d8a5699
 
     def tryRead(self, tag):
         try:
             return self[tag][0]
         except:
-            print("TAG NOT AVAILABLE: {} FOR MP3: {}".format(tag, self.path))
+            if not tag in ["album"]:
+                print("TAG NOT AVAILABLE: {} FOR MP3: {}".format(tag, self.path))
             return ""
 
     def __repr__(self):
@@ -100,14 +106,19 @@ class Collection:
         mp3["album"] = song.album
         mp3["title"] = song.title
         mp3["tracknumber"] = str(song.number)
+<<<<<<< HEAD
         if mp3.date is not None:
             mp3["date"] = str(mp3.date.year)
             mp3["originaldate"] = str(mp3.date.year)
         else:
             mp3["originaldate"] = ""
             print("MISSING DATE!!!")
+||||||| merged common ancestors
+=======
+        mp3["date"] = ""
+>>>>>>> e0cca04f38782b335a7f024004ebbd2a8d8a5699
         mp3.save()
-        print("{} fixed. (LOL)".format(mp3))
+        print("{} fixed -> {}.".format(mp3, song))
 
     def copySong(self, song, mp3, target):
         sourcePath = mp3.path
